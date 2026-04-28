@@ -916,13 +916,6 @@ pub trait AIClient: 'static + Send + Sync {
         request: ListAgentMessagesRequest,
     ) -> anyhow::Result<Vec<AgentMessageHeader>, anyhow::Error>;
 
-    async fn poll_agent_events(
-        &self,
-        run_ids: &[String],
-        since_sequence: i64,
-        limit: i32,
-    ) -> anyhow::Result<Vec<AgentRunEvent>, anyhow::Error>;
-
     async fn report_agent_event(
         &self,
         run_id: &str,
@@ -1867,22 +1860,6 @@ impl AIClient for ServerApi {
         let path = format!("agent/messages/{run_id}?{}", params.join("&"));
         let response: Vec<AgentMessageHeader> = self.get_public_api(&path).await?;
         Ok(response)
-    }
-
-    async fn poll_agent_events(
-        &self,
-        run_ids: &[String],
-        since_sequence: i64,
-        limit: i32,
-    ) -> anyhow::Result<Vec<AgentRunEvent>, anyhow::Error> {
-        let run_ids_param: String = run_ids
-            .iter()
-            .map(|id| format!("run_ids={}", urlencoding::encode(id)))
-            .collect::<Vec<_>>()
-            .join("&");
-        let url = format!("agent/events?{run_ids_param}&since={since_sequence}&limit={limit}");
-        let events: Vec<AgentRunEvent> = self.get_public_api(&url).await?;
-        Ok(events)
     }
 
     async fn report_agent_event(
